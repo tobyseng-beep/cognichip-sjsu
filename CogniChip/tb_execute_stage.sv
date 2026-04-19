@@ -1,0 +1,93 @@
+module tb_execute_stage;
+    logic clock, reset;
+    logic [31:0] instr, acc_in;
+    logic [63:0] result;
+    logic [3:0]  alu_flags;
+    logic [4:0]  wb_rd;
+    logic        wb_reg_write, wb_valid;
+
+    execute_stage u_dut (
+        .clock(clock), .reset(reset),
+        .instr(instr), .acc_in(acc_in),
+        .result(result), .alu_flags(alu_flags),
+        .wb_rd(wb_rd), .wb_reg_write(wb_reg_write),
+        .wb_valid(wb_valid)
+    );
+
+    initial clock = 0;
+    always #5 clock = ~clock;
+
+    int test_count, fail_count;
+
+    function automatic logic [31:0] enc_r(
+        input logic [6:0] f7, input logic [4:0] rs2, rs1,
+        input logic [2:0] f3, input logic [4:0] rd, input logic [6:0] op
+    );
+        return {f7, rs2, rs1, f3, rd, op};
+    endfunction
+
+    function automatic logic [31:0] enc_c(
+        input logic [4:0] rs2, rs1, rd, input logic [2:0] f3
+    );
+        return {7'h0, rs2, rs1, f3, rd, 7'b0001011};
+    endfunction
+
+    task automatic apply_and_check(
+        input logic [31:0] tv_instr,
+        input logic [31:0] tv_acc,
+        input logic [63:0] expected,
+        input logic [4:0]  exp_rd,
+        input string       tname
+    );
+        instr  = tv_instr;
+        acc_in = tv_acc;
+        @(posedge clock); #1;
+        test_count++;
+        if (result !== expected) begin
+            fail_count++;
+            $display("LOG: %0t : ERROR : tb_execute_stage : dut.result : expected_value: 64'h%016h actual_value: 64'h%016h [%s]",
+                     $time, expected, result, tname);
+        end
+        if (wb_rd !== exp_rd) begin
+            fail_count++;
+            $display("LOG: %0t : ERROR : tb_execute_stage : dut.wb_rd : expected_value: %0d actual_value: %0d [%s]",
+                     $time, exp_rd, wb_rd, tname);
+        end
+        instr = 32'h0;
+    endtask
+
+    initial begin
+        $display("TEST START");
+        test_count = 0; fail_count = 0;
+        instr = 32'h0; acc_in = 32'h0; reset = 1;
+        repeat(2) @(posedge clock); #1;
+        reset = 0;
+        @(posedge clock); #1;
+
+        u_dut.u_rf.regs[1]  = 32'd10;
+        u_dut.u_rf.regs[2]  = 32'd5;
+        u_dut.u_rf.regs[3]  = 32'h01020304;
+        u_dut.u_rf.regs[4]  = 32'h01010101;
+        @(posedge clock); #1;
+
+        apply_and_check(enc_r(7'h0,5'd2,5'd1,3'b000,5'd5,7'b0110011), 32'h0, 64'd15, 5'd5, "ADD x1+x2=15");
+        apply_and_check(enc_r(7'b0100000,5'd2,5'd1,3'b000,5'd6,7'b0110011), 32'h0, 64'd5, 5'd6, "SUB x1-x2=5");
+        apply_and_check(enc_r(7'h0,5'd2,5'd1,3'b111,5'd7,7'b0110011), 32'h0, 64'd0, 5'd7, "AND 10&5=0");
+        apply_and_check(enc_r(7'h0,5'd2,5'd1,3'b110,5'd8,7'b0110011), 32'h0, 64'd15, 5'd8, "OR 10|5=15");
+        apply_and_check(enc_r(7'h0,5'd2,5'd1,3'b100,5'd9,7'b0110011), 32'h0, 64'd15, 5'd9, "XOR 10^5=15");
+        apply_and_check(enc_r(7'h0,5'd2,5'd1,3'b001,5'd10,7'b0110011), 32'h0, 64'd20, 5'd10, "SLL 10<<1=20");
+        apply_and_check(enc_c(5'd4,5'd3,5'd11,3'b001), 32'h0, 64'd10, 5'd11, "DOT [4,3,2,1].[1,1,1,1]=10");
+        apply_and_check(enc_c(5'd4,5'd3,5'd12,3'b000), 32'd100, 64'd104, 5'd12, "MAC 4*1+100=104");
+        apply_and_check(enc_c(5'd4,5'd3,5'd13,3'b010), 32'h0, 64'h0003000300070007, 5'd13, "MATMUL");
+
+        #20;
+        $display("LOG: %0t : INFO : tb_execute_stage : summary : expected_value: 0_failures actual_value: %0d_failures [Total: %0d]",
+                 $time, fail_count, test_count);
+        if (fail_count == 0) $display("TEST PASSED");
+        else begin $display("ERROR"); $error("%0d/%0d FAILED", fail_count, test_count); end
+        $finish;
+    end
+
+    initial begin #50000; $display("ERROR"); $fatal(1,"TIMEOUT"); end
+    initial begin $dumpfile("dumpfile.fst"); $dumpvars(0); end
+endmodule

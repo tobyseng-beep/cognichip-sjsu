@@ -38,3 +38,51 @@ dut_execute_stage:
     - riscv_decoder.sv
     - register_file.sv
     - execute_stage.sv
+
+bench_execute_stage:
+  deps:
+    - alu_8bit.sv
+    - mac_unit.sv
+    - alu_mac_datapath.sv
+    - riscv_decoder.sv
+    - register_file.sv
+    - execute_stage.sv
+    - tb_execute_stage.sv
+  top: tb_execute_stage
+
+dut_riscv_core:
+  deps:
+    - alu_8bit.sv
+    - mac_unit.sv
+    - alu_mac_datapath.sv
+    - riscv_decoder.sv
+    - register_file.sv
+    - execute_stage.sv
+    - fetch_stage.sv
+    - writeback_stage.sv
+    - hazard_unit.sv
+    - riscv_core.sv
+
+bench_execute_stage:
+  deps:
+    - alu_8bit.sv
+    - mac_unit.sv
+    - alu_mac_datapath.sv
+    - riscv_decoder.sv
+    - register_file.sv
+    - execute_stage.sv
+    - tb_execute_stage.sv
+  top: tb_execute_stage
+
+dut_riscv_core:
+  deps:
+    - alu_8bit.sv
+    - mac_unit.sv
+    - alu_mac_datapath.sv
+    - riscv_decoder.sv
+    - register_file.sv
+    - execute_stage.sv
+    - fetch_stage.sv
+    - writeback_stage.sv
+    - hazard_unit.sv
+    - riscv_core.sv
