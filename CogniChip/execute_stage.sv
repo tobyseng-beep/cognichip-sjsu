@@ -52,7 +52,10 @@ module execute_stage (
     );
 
     // -------------------------------------------------------------------------
-    // Pipeline register
+    // Pipeline register — clock-enabled on valid_instr.
+    // When a NOP/bubble flows through (valid_instr=0), the 64-bit result and
+    // flag registers are held stable to avoid unnecessary switching activity.
+    // Write-enable outputs are explicitly cleared to prevent spurious writes.
     // -------------------------------------------------------------------------
     always_ff @(posedge clock or posedge reset) begin
         if (reset) begin
@@ -63,14 +66,25 @@ module execute_stage (
             wb_mac_opcode <= 2'b00;
             wb_reg_write  <= 1'b0;
             wb_valid      <= 1'b0;
-        end else begin
+        end else if (valid_instr) begin
+            // Valid instruction: capture full result and control
             result        <= dp_result;
             alu_flags     <= dp_flags;
             wb_rd         <= rd_in;
             wb_unit_sel   <= unit_sel;
             wb_mac_opcode <= mac_opcode;
-            wb_reg_write  <= reg_write_in & valid_instr;
-            wb_valid      <= valid_instr;
+            wb_reg_write  <= reg_write_in;
+            wb_valid      <= 1'b1;
+        end else begin
+            // NOP/bubble: fully quiesce all control outputs.
+            // Zeroing rd, unit_sel, mac_opcode prevents writeback_stage from
+            // seeing stale toggling values and eliminates switching in the
+            // downstream register file write-port address decode logic.
+            wb_reg_write  <= 1'b0;
+            wb_valid      <= 1'b0;
+            wb_rd         <= 5'h0;
+            wb_unit_sel   <= 1'b0;
+            wb_mac_opcode <= 2'b00;
         end
     end
 

@@ -63,19 +63,70 @@ module mac_unit (
     assign b[3] = b_in[31:24];
 
     // -------------------------------------------------------------------------
-    // Pre-compute all 8x8 partial products (shared across DOT and MATMUL)
-    //   prod[i][j] = a[i] * b[j]  (16-bit result, no overflow)
+    // Opcode-based gate enables — used to silence multiplier inputs when a
+    // product is not needed by the active operation, reducing dynamic power.
+    //
+    //   Products required per opcode:
+    //     OP_MAC    : prod_00 only                            (1 of 10 active)
+    //     OP_DOT    : prod_00, prod_11, prod_22, prod_33      (4 of 10 active)
+    //     OP_MATMUL : prod_00, prod_01, prod_12, prod_13,     (8 of 10 active)
+    //                 prod_20, prod_21, prod_32, prod_33
+    //
+    //   6 products (prod[0][2], prod[0][3], prod[1][0], prod[2][3],
+    //               prod[3][0], prod[3][1]) are NEVER needed and removed.
     // -------------------------------------------------------------------------
-    logic [15:0] prod [0:3][0:3];
+    logic dot_en;       // high for DOT (diagonal products)
+    logic matmul_en;    // high for MATMUL (off-diagonal products)
+    logic dot_mm_en;    // high for DOT or MATMUL (prod_33 shared)
 
-    genvar gi, gj;
-    generate
-        for (gi = 0; gi < 4; gi++) begin : gen_row
-            for (gj = 0; gj < 4; gj++) begin : gen_col
-                assign prod[gi][gj] = {8'h00, a[gi]} * {8'h00, b[gj]};
-            end
-        end
-    endgenerate
+    assign dot_en    = (opcode == OP_DOT);
+    assign matmul_en = (opcode == OP_MATMUL);
+    assign dot_mm_en = dot_en | matmul_en;
+
+    // -------------------------------------------------------------------------
+    // Partial products — only the 10 products actually consumed by any op.
+    // Gate operand A to zero for inactive products; multiplier output = 0.
+    // -------------------------------------------------------------------------
+
+    // prod[0][0] = a[0]*b[0] — used by MAC, DOT, MATMUL (always active)
+    logic [15:0] prod_00;
+    assign prod_00 = {8'h0, a[0]} * {8'h0, b[0]};
+
+    // prod[0][1] = a[0]*b[1] — MATMUL only (c01)
+    logic [15:0] prod_01;
+    assign prod_01 = {8'h0, (matmul_en ? a[0] : 8'h0)} * {8'h0, b[1]};
+
+    // prod[1][1] = a[1]*b[1] — DOT only
+    logic [15:0] prod_11;
+    assign prod_11 = {8'h0, (dot_en ? a[1] : 8'h0)} * {8'h0, b[1]};
+
+    // prod[1][2] = a[1]*b[2] — MATMUL only (c00)
+    logic [15:0] prod_12;
+    assign prod_12 = {8'h0, (matmul_en ? a[1] : 8'h0)} * {8'h0, b[2]};
+
+    // prod[1][3] = a[1]*b[3] — MATMUL only (c01)
+    logic [15:0] prod_13;
+    assign prod_13 = {8'h0, (matmul_en ? a[1] : 8'h0)} * {8'h0, b[3]};
+
+    // prod[2][0] = a[2]*b[0] — MATMUL only (c10)
+    logic [15:0] prod_20;
+    assign prod_20 = {8'h0, (matmul_en ? a[2] : 8'h0)} * {8'h0, b[0]};
+
+    // prod[2][1] = a[2]*b[1] — MATMUL only (c11)
+    logic [15:0] prod_21;
+    assign prod_21 = {8'h0, (matmul_en ? a[2] : 8'h0)} * {8'h0, b[1]};
+
+    // prod[2][2] = a[2]*b[2] — DOT only
+    logic [15:0] prod_22;
+    assign prod_22 = {8'h0, (dot_en ? a[2] : 8'h0)} * {8'h0, b[2]};
+
+    // prod[3][2] = a[3]*b[2] — MATMUL only (c10)
+    logic [15:0] prod_32;
+    assign prod_32 = {8'h0, (matmul_en ? a[3] : 8'h0)} * {8'h0, b[2]};
+
+    // prod[3][3] = a[3]*b[3] — DOT and MATMUL (c11)
+    logic [15:0] prod_33;
+    assign prod_33 = {8'h0, (dot_mm_en ? a[3] : 8'h0)} * {8'h0, b[3]};
 
     // -------------------------------------------------------------------------
     // DOT product: sum a[i]*b[i] for i = 0..3
@@ -83,17 +134,17 @@ module mac_unit (
     //   Max value: 4 * (255*255) = 260,100 → fits in 18 bits → use 32-bit
     // -------------------------------------------------------------------------
     logic [31:0] dot_result;
-    assign dot_result = {16'h0, prod[0][0]}
-                      + {16'h0, prod[1][1]}
-                      + {16'h0, prod[2][2]}
-                      + {16'h0, prod[3][3]};
+    assign dot_result = {16'h0, prod_00}
+                      + {16'h0, prod_11}
+                      + {16'h0, prod_22}
+                      + {16'h0, prod_33};
 
     // -------------------------------------------------------------------------
     // MAC: acc_in + a[0] * b[0]
     //   Single element multiply-accumulate, 32-bit accumulation
     // -------------------------------------------------------------------------
     logic [31:0] mac_result;
-    assign mac_result = acc_in + {16'h0, prod[0][0]};
+    assign mac_result = acc_in + {16'h0, prod_00};
 
     // -------------------------------------------------------------------------
     // MATMUL: 2x2 matrix multiply
@@ -115,10 +166,10 @@ module mac_unit (
     // -------------------------------------------------------------------------
     logic [15:0] c00, c01, c10, c11;
 
-    assign c00 = prod[0][0] + prod[1][2];   // a[0]*b[0] + a[1]*b[2]
-    assign c01 = prod[0][1] + prod[1][3];   // a[0]*b[1] + a[1]*b[3]
-    assign c10 = prod[2][0] + prod[3][2];   // a[2]*b[0] + a[3]*b[2]
-    assign c11 = prod[2][1] + prod[3][3];   // a[2]*b[1] + a[3]*b[3]
+    assign c00 = prod_00 + prod_12;   // a[0]*b[0] + a[1]*b[2]
+    assign c01 = prod_01 + prod_13;   // a[0]*b[1] + a[1]*b[3]
+    assign c10 = prod_20 + prod_32;   // a[2]*b[0] + a[3]*b[2]
+    assign c11 = prod_21 + prod_33;   // a[2]*b[1] + a[3]*b[3]
 
     // -------------------------------------------------------------------------
     // Output mux and valid flag
