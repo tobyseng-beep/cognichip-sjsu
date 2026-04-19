@@ -29,3 +29,12 @@ bench_benchmark:
     - alu_mac_datapath.sv
     - tb_benchmark.sv
   top: tb_benchmark
+
+dut_execute_stage:
+  deps:
+    - alu_8bit.sv
+    - mac_unit.sv
+    - alu_mac_datapath.sv
+    - riscv_decoder.sv
+    - register_file.sv
+    - execute_stage.sv
