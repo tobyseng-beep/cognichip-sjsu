@@ -1,0 +1,348 @@
+// =============================================================================
+// Module  : tb_benchmark
+// Description: Instruction count comparison benchmark for RISC-V custom ISA.
+//
+//   This testbench quantifies the performance benefit of the custom matrix
+//   instructions (DOT, MATMUL, MAC) versus the equivalent scalar RISC-V
+//   instruction sequences, directly measuring the project's key metric:
+//   "instruction count reduction and cycle savings."
+//
+//   Two kernel implementations are modeled and compared:
+//
+//   KERNEL 1 - 2x2 MATMUL:
+//     Scalar RISC-V  : 8 MUL + 4 ADD = 12 instructions per matrix multiply
+//     Custom ISA     : 1 MATMUL instruction
+//     Savings        : 11 instructions (91.7% reduction)
+//
+//   KERNEL 2 - 4-element DOT product:
+//     Scalar RISC-V  : 4 MUL + 3 ADD = 7 instructions per dot product
+//     Custom ISA     : 1 DOT instruction
+//     Savings        : 6 instructions (85.7% reduction)
+//
+//   KERNEL 3 - Chained MAC (accumulate 4 products):
+//     Scalar RISC-V  : 4 MUL + 4 ADD = 8 instructions
+//     Custom ISA     : 4 MAC instructions (one per element)
+//     Savings        : 4 instructions (50% reduction)
+//
+//   Both paths are simulated and their results cross-checked to confirm
+//   functional equivalence — proving correctness while measuring efficiency.
+// =============================================================================
+
+module tb_benchmark;
+
+    // -------------------------------------------------------------------------
+    // DUT signals
+    // -------------------------------------------------------------------------
+    logic [31:0] a_in, b_in, acc_in;
+    logic [1:0]  mac_opcode;
+    logic [63:0] mac_result;
+    logic        mac_valid;
+
+    // -------------------------------------------------------------------------
+    // DUT instantiation
+    // -------------------------------------------------------------------------
+    mac_unit u_dut (
+        .a_in   (a_in),
+        .b_in   (b_in),
+        .acc_in (acc_in),
+        .opcode (mac_opcode),
+        .result (mac_result),
+        .valid  (mac_valid)
+    );
+
+    // -------------------------------------------------------------------------
+    // Benchmark counters
+    // -------------------------------------------------------------------------
+    int scalar_instr_total;
+    int custom_instr_total;
+    int test_count;
+    int fail_count;
+
+    // Cycle model: each instruction = 1 cycle (CPI=1 baseline)
+    // For scalar: MUL=3 cycles, ADD=1 cycle (more realistic)
+    int scalar_cycles_total;
+    int custom_cycles_total;
+
+    localparam int SCALAR_MUL_CY = 3;
+    localparam int SCALAR_ADD_CY = 1;
+    localparam int CUSTOM_CY     = 1; // Single-cycle custom instruction
+
+    // -------------------------------------------------------------------------
+    // Opcode parameters
+    // -------------------------------------------------------------------------
+    localparam logic [1:0] OP_MAC    = 2'b00;
+    localparam logic [1:0] OP_DOT    = 2'b01;
+    localparam logic [1:0] OP_MATMUL = 2'b10;
+
+    // -------------------------------------------------------------------------
+    // Pack helper
+    // -------------------------------------------------------------------------
+    function automatic logic [31:0] pack4(
+        input logic [7:0] e0, e1, e2, e3
+    );
+        return {e3, e2, e1, e0};
+    endfunction
+
+    // -------------------------------------------------------------------------
+    // Verification check
+    // -------------------------------------------------------------------------
+    task automatic verify(
+        input logic [63:0] custom_res,
+        input logic [63:0] scalar_res,
+        input string        name
+    );
+        test_count++;
+        if (custom_res !== scalar_res) begin
+            fail_count++;
+            $display("LOG: %0t : ERROR : tb_benchmark : result_mismatch : expected_value: 64'h%016h actual_value: 64'h%016h [%s]",
+                     $time, scalar_res, custom_res, name);
+        end else begin
+            $display("LOG: %0t : INFO : tb_benchmark : result_match : expected_value: 64'h%016h actual_value: 64'h%016h [%s OK]",
+                     $time, scalar_res, custom_res, name);
+        end
+    endtask
+
+    // =========================================================================
+    // KERNEL 1: 2x2 MATMUL benchmark
+    // =========================================================================
+    task automatic benchmark_matmul(
+        input logic [7:0] a00, a01, a10, a11,
+        input logic [7:0] b00, b01, b10, b11,
+        input string       label
+    );
+        // --- Scalar RISC-V path ---
+        // C[0][0] = a00*b00 + a01*b10  (1 MUL + 1 MUL + 1 ADD)
+        // C[0][1] = a00*b01 + a01*b11  (1 MUL + 1 MUL + 1 ADD)
+        // C[1][0] = a10*b00 + a11*b10  (1 MUL + 1 MUL + 1 ADD)
+        // C[1][1] = a10*b01 + a11*b11  (1 MUL + 1 MUL + 1 ADD)
+        // Total: 8 MUL + 4 ADD = 12 instructions, 8*3+4*1 = 28 cycles
+        logic [15:0] sc00, sc01, sc10, sc11;
+        logic [63:0] scalar_res;
+        logic [63:0] custom_res;
+        int s_instr, s_cycles;
+
+        sc00 = ({8'h0,a00} * {8'h0,b00}) + ({8'h0,a01} * {8'h0,b10});
+        sc01 = ({8'h0,a00} * {8'h0,b01}) + ({8'h0,a01} * {8'h0,b11});
+        sc10 = ({8'h0,a10} * {8'h0,b00}) + ({8'h0,a11} * {8'h0,b10});
+        sc11 = ({8'h0,a10} * {8'h0,b01}) + ({8'h0,a11} * {8'h0,b11});
+        scalar_res = {sc11, sc10, sc01, sc00};
+
+        s_instr  = 12;  // 8 MUL + 4 ADD
+        s_cycles = (8 * SCALAR_MUL_CY) + (4 * SCALAR_ADD_CY); // = 28
+
+        // --- Custom ISA path ---
+        a_in      = pack4(a00, a01, a10, a11);
+        b_in      = pack4(b00, b01, b10, b11);
+        acc_in    = 32'h0;
+        mac_opcode = OP_MATMUL;
+        #5;
+        custom_res = mac_result;
+
+        scalar_instr_total += s_instr;
+        custom_instr_total += 1;
+        scalar_cycles_total += s_cycles;
+        custom_cycles_total += CUSTOM_CY;
+
+        $display("LOG: %0t : INFO : tb_benchmark : matmul_kernel : expected_value: scalar=%0d_instr/%0d_cyc actual_value: custom=1_instr/%0d_cyc [%s savings=%0d_instr/%0d_cyc]",
+                 $time, s_instr, s_cycles, CUSTOM_CY, label, s_instr-1, s_cycles-CUSTOM_CY);
+
+        verify(custom_res, scalar_res, {"MATMUL_", label});
+    endtask
+
+    // =========================================================================
+    // KERNEL 2: 4-element DOT product benchmark
+    // =========================================================================
+    task automatic benchmark_dot(
+        input logic [7:0] a0, a1, a2, a3,
+        input logic [7:0] b0, b1, b2, b3,
+        input string       label
+    );
+        // --- Scalar RISC-V path ---
+        // dot = a0*b0 + a1*b1 + a2*b2 + a3*b3
+        // 4 MUL + 3 ADD = 7 instructions, 4*3+3*1 = 15 cycles
+        logic [31:0] scalar_res;
+        logic [63:0] custom_res;
+        int s_instr, s_cycles;
+
+        scalar_res = ({16'h0,a0}*{16'h0,b0})
+                   + ({16'h0,a1}*{16'h0,b1})
+                   + ({16'h0,a2}*{16'h0,b2})
+                   + ({16'h0,a3}*{16'h0,b3});
+
+        s_instr  = 7;   // 4 MUL + 3 ADD
+        s_cycles = (4 * SCALAR_MUL_CY) + (3 * SCALAR_ADD_CY); // = 15
+
+        // --- Custom ISA path ---
+        a_in      = pack4(a0, a1, a2, a3);
+        b_in      = pack4(b0, b1, b2, b3);
+        acc_in    = 32'h0;
+        mac_opcode = OP_DOT;
+        #5;
+        custom_res = mac_result;
+
+        scalar_instr_total += s_instr;
+        custom_instr_total += 1;
+        scalar_cycles_total += s_cycles;
+        custom_cycles_total += CUSTOM_CY;
+
+        $display("LOG: %0t : INFO : tb_benchmark : dot_kernel : expected_value: scalar=%0d_instr/%0d_cyc actual_value: custom=1_instr/%0d_cyc [%s savings=%0d_instr/%0d_cyc]",
+                 $time, s_instr, s_cycles, CUSTOM_CY, label, s_instr-1, s_cycles-CUSTOM_CY);
+
+        verify(custom_res, {32'h0, scalar_res}, {"DOT_", label});
+    endtask
+
+    // =========================================================================
+    // KERNEL 3: Chained MAC (accumulate 4 products = one dot via MAC loop)
+    // =========================================================================
+    task automatic benchmark_chained_mac(
+        input logic [7:0] a0, a1, a2, a3,
+        input logic [7:0] b0, b1, b2, b3,
+        input string       label
+    );
+        // --- Scalar RISC-V path ---
+        // acc = 0
+        // acc += a0*b0  (MUL + ADD)
+        // acc += a1*b1  (MUL + ADD)
+        // acc += a2*b2  (MUL + ADD)
+        // acc += a3*b3  (MUL + ADD)
+        // 4 MUL + 4 ADD = 8 instructions, 4*3+4*1 = 16 cycles
+        logic [31:0] scalar_acc;
+        logic [31:0] custom_acc;
+        logic [63:0] mac_out;
+        int s_instr, s_cycles;
+
+        scalar_acc = ({16'h0,a0}*{16'h0,b0})
+                   + ({16'h0,a1}*{16'h0,b1})
+                   + ({16'h0,a2}*{16'h0,b2})
+                   + ({16'h0,a3}*{16'h0,b3});
+
+        s_instr  = 8;   // 4 MUL + 4 ADD
+        s_cycles = (4 * SCALAR_MUL_CY) + (4 * SCALAR_ADD_CY); // = 16
+
+        // --- Custom ISA path: 4 MAC instructions ---
+        // MAC 1: acc = 0 + a0*b0
+        a_in = pack4(a0,8'h0,8'h0,8'h0); b_in = pack4(b0,8'h0,8'h0,8'h0);
+        acc_in = 32'd0; mac_opcode = OP_MAC; #5;
+        custom_acc = mac_result[31:0];
+
+        // MAC 2: acc = prev + a1*b1
+        a_in = pack4(a1,8'h0,8'h0,8'h0); b_in = pack4(b1,8'h0,8'h0,8'h0);
+        acc_in = custom_acc; mac_opcode = OP_MAC; #5;
+        custom_acc = mac_result[31:0];
+
+        // MAC 3: acc = prev + a2*b2
+        a_in = pack4(a2,8'h0,8'h0,8'h0); b_in = pack4(b2,8'h0,8'h0,8'h0);
+        acc_in = custom_acc; mac_opcode = OP_MAC; #5;
+        custom_acc = mac_result[31:0];
+
+        // MAC 4: acc = prev + a3*b3
+        a_in = pack4(a3,8'h0,8'h0,8'h0); b_in = pack4(b3,8'h0,8'h0,8'h0);
+        acc_in = custom_acc; mac_opcode = OP_MAC; #5;
+        custom_acc = mac_result[31:0];
+
+        scalar_instr_total += s_instr;
+        custom_instr_total += 4; // 4 MAC instructions
+        scalar_cycles_total += s_cycles;
+        custom_cycles_total += 4 * CUSTOM_CY;
+
+        $display("LOG: %0t : INFO : tb_benchmark : mac_chain_kernel : expected_value: scalar=%0d_instr/%0d_cyc actual_value: custom=4_instr/%0d_cyc [%s savings=%0d_instr/%0d_cyc]",
+                 $time, s_instr, s_cycles, 4*CUSTOM_CY, label, s_instr-4, s_cycles-4);
+
+        verify({32'h0, custom_acc}, {32'h0, scalar_acc}, {"MAC_CHAIN_", label});
+    endtask
+
+    // =========================================================================
+    // Main benchmark sequence
+    // =========================================================================
+    initial begin
+        $display("TEST START");
+        $display("===========================================================");
+        $display(" RISC-V Custom ISA Extension Benchmark");
+        $display(" Project: MAC/DOT/MATMUL vs Scalar RISC-V");
+        $display(" Cycle model: MUL=%0d cyc, ADD=%0d cyc, CUSTOM=%0d cyc",
+                 SCALAR_MUL_CY, SCALAR_ADD_CY, CUSTOM_CY);
+        $display("===========================================================");
+
+        scalar_instr_total = 0;
+        custom_instr_total = 0;
+        scalar_cycles_total = 0;
+        custom_cycles_total = 0;
+        test_count = 0;
+        fail_count = 0;
+
+        a_in = 0; b_in = 0; acc_in = 0; mac_opcode = 0;
+        #10;
+
+        // --- MATMUL benchmarks ---
+        $display("\n-- KERNEL 1: MATMUL 2x2 --");
+        benchmark_matmul(8'd1,8'd2,8'd3,8'd4,  8'd5,8'd6,8'd7,8'd8,  "K1_basic");
+        benchmark_matmul(8'd1,8'd0,8'd0,8'd1,  8'd1,8'd2,8'd3,8'd4,  "K1_identity");
+        benchmark_matmul(8'd2,8'd3,8'd4,8'd5,  8'd6,8'd7,8'd8,8'd9,  "K1_var2");
+        benchmark_matmul(8'd10,8'd20,8'd30,8'd40, 8'd1,8'd2,8'd3,8'd4, "K1_larger");
+        benchmark_matmul(8'd255,8'd0,8'd0,8'd255, 8'd1,8'd0,8'd0,8'd1, "K1_diagonal");
+
+        // --- DOT benchmarks ---
+        $display("\n-- KERNEL 2: DOT 4-element --");
+        benchmark_dot(8'd1,8'd2,8'd3,8'd4,  8'd4,8'd3,8'd2,8'd1,  "K2_basic");
+        benchmark_dot(8'd1,8'd1,8'd1,8'd1,  8'd5,8'd6,8'd7,8'd8,  "K2_unit");
+        benchmark_dot(8'd10,8'd20,8'd30,8'd40, 8'd1,8'd1,8'd1,8'd1, "K2_sum");
+        benchmark_dot(8'd255,8'd255,8'd255,8'd255, 8'd1,8'd1,8'd1,8'd1, "K2_max");
+        benchmark_dot(8'd0,8'd0,8'd0,8'd0,  8'd5,8'd6,8'd7,8'd8,  "K2_zeros");
+
+        // --- Chained MAC benchmarks ---
+        $display("\n-- KERNEL 3: Chained MAC --");
+        benchmark_chained_mac(8'd1,8'd2,8'd3,8'd4, 8'd1,8'd2,8'd3,8'd4, "K3_basic");
+        benchmark_chained_mac(8'd5,8'd6,8'd7,8'd8, 8'd1,8'd1,8'd1,8'd1, "K3_sum");
+        benchmark_chained_mac(8'd10,8'd10,8'd10,8'd10, 8'd3,8'd3,8'd3,8'd3, "K3_equal");
+
+        #10;
+
+        // =====================================================================
+        // Summary Report
+        // =====================================================================
+        $display("\n===========================================================");
+        $display(" BENCHMARK SUMMARY REPORT");
+        $display("===========================================================");
+        $display(" Correctness : %0d tests, %0d failures", test_count, fail_count);
+        $display("-----------------------------------------------------------");
+        $display(" Instructions:");
+        $display("   Scalar RISC-V  : %4d instructions", scalar_instr_total);
+        $display("   Custom ISA     : %4d instructions", custom_instr_total);
+        $display("   Reduction      : %4d instructions (%0d%%)",
+                 scalar_instr_total - custom_instr_total,
+                 ((scalar_instr_total - custom_instr_total) * 100) / scalar_instr_total);
+        $display("-----------------------------------------------------------");
+        $display(" Cycles (MUL=%0dcyc, ADD=%0dcyc, CUSTOM=%0dcyc):",
+                 SCALAR_MUL_CY, SCALAR_ADD_CY, CUSTOM_CY);
+        $display("   Scalar RISC-V  : %4d cycles", scalar_cycles_total);
+        $display("   Custom ISA     : %4d cycles", custom_cycles_total);
+        $display("   Savings        : %4d cycles (%0d%%)",
+                 scalar_cycles_total - custom_cycles_total,
+                 ((scalar_cycles_total - custom_cycles_total) * 100) / scalar_cycles_total);
+        $display("===========================================================");
+
+        $display("LOG: %0t : INFO : tb_benchmark : summary : expected_value: 0_failures actual_value: %0d_failures [Total tests: %0d]",
+                 $time, fail_count, test_count);
+
+        if (fail_count == 0) begin
+            $display("TEST PASSED");
+        end else begin
+            $display("ERROR");
+            $error("tb_benchmark: %0d / %0d checks FAILED", fail_count, test_count);
+        end
+
+        $finish;
+    end
+
+    initial begin
+        #100000;
+        $display("ERROR");
+        $fatal(1, "tb_benchmark: TIMEOUT");
+    end
+
+    initial begin
+        $dumpfile("dumpfile.fst");
+        $dumpvars(0);
+    end
+
+endmodule

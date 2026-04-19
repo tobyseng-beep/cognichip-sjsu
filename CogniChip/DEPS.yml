@@ -21,3 +21,11 @@ bench_mac_unit:
     - alu_mac_datapath.sv
     - tb_mac_unit.sv
   top: tb_mac_unit
+
+bench_benchmark:
+  deps:
+    - alu_8bit.sv
+    - mac_unit.sv
+    - alu_mac_datapath.sv
+    - tb_benchmark.sv
+  top: tb_benchmark
