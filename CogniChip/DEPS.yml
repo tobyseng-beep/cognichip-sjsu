@@ -1,0 +1,5 @@
+bench_alu_8bit:
+  deps:
+    - alu_8bit.sv
+    - tb_alu_8bit.sv
+  top: tb_alu_8bit
