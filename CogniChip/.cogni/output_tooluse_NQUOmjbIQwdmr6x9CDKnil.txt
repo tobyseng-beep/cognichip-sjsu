@@ -1,0 +1,14 @@
+=== Command: cd /Users/toby/CogniChip && git remote add origin https://github.com/tobyseng-beep/cognichip-sjsu.git && git push -u origin main (2026-04-19T05:07:32.280Z) ===
+Exit Code: 1
+Output:
+To https://github.com/tobyseng-beep/cognichip-sjsu.git
+ ! [rejected]        main -> main (fetch first)
+error: failed to push some refs to 'https://github.com/tobyseng-beep/cognichip-sjsu.git'
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally. This is usually caused by another repository pushing
+hint: to the same ref. You may want to first integrate the remote changes
+hint: (e.g., 'git pull ...') before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+
+=== End Output ===
+

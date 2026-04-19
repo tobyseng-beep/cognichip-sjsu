@@ -1,0 +1,61 @@
+=== Command: cd /Users/toby/CogniChip && git status && git log --oneline -3 (2026-04-19T05:23:01.138Z) ===
+Exit Code: 0
+Output:
+warning: could not open directory 'Pictures/Photo Booth Library/': Operation not permitted
+warning: could not open directory '.Trash/': Operation not permitted
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	../.CFUserTextEncoding
+	../.DS_Store
+	../.cognichip-beta/
+	../.config/
+	../.gitconfig
+	../.lesshst
+	../.local/
+	../.lunarclient/
+	../.ssh/
+	../.swiftpm/
+	../.vscode/
+	../.zsh_history
+	../.zsh_sessions/
+	../Applications/
+	.cogni/
+	cognichip-sjsu/
+	simulation_results/
+	../Desktop/
+	../Documents/
+	../Downloads/
+	../Library/
+	../Movies/
+	../Music/
+	../Pictures/
+	../Public/
+	../VSCode/
+	../cognichip-sjsu/
+	../ee30labfinal
+	../ee30labfinal.c
+	../ee30labfinal.dSYM/
+	"../eval \"$(ssh-agent -s)\""
+	"../eval \"$(ssh-agent -s)\".pub"
+	../funnypetnames
+	../lab8
+	../lab8.c
+	../lab8.dSYM/
+	../main
+	../main.c
+	../main.dSYM/
+	../samples.coe
+	../sin_samples.coe
+	../tempCodeRunnerFile
+	../tempCodeRunnerFile.c
+
+nothing added to commit but untracked files present (use "git add" to track)
+8b9f351 Add MAC unit, ALU-MAC datapath, and MAC testbench for RISC-V custom ISA extensions
+a6d6eb1 Merge branch 'main' of https://github.com/tobyseng-beep/cognichip-sjsu
+c706a32 Add 8-bit ALU: RTL, testbench, spec, and DEPS
+
+=== End Output ===
+

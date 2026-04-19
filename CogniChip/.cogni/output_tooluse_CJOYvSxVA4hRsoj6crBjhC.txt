@@ -1,0 +1,7 @@
+=== Command: ls -la /Users/toby/CogniChip/alu_mac_datapath.sv && cat /Users/toby/CogniChip/alu_mac_datapath.sv (2026-04-19T05:12:35.015Z) ===
+Exit Code: 0
+Output:
+-rw-r--r--@ 1 toby  staff  0 Apr 18 22:12 /Users/toby/CogniChip/alu_mac_datapath.sv
+
+=== End Output ===
+

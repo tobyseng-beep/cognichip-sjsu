@@ -4,19 +4,23 @@ bench_alu_8bit:
     - tb_alu_8bit.sv
   top: tb_alu_8bit
 
+dut_alu_32bit:
+  deps:
+    - alu_32bit.sv
+
 dut_mac_unit:
   deps:
     - mac_unit.sv
 
 dut_alu_mac_datapath:
   deps:
-    - alu_8bit.sv
+    - alu_32bit.sv
     - mac_unit.sv
     - alu_mac_datapath.sv
 
 bench_mac_unit:
   deps:
-    - alu_8bit.sv
+    - alu_32bit.sv
     - mac_unit.sv
     - alu_mac_datapath.sv
     - tb_mac_unit.sv
@@ -24,7 +28,7 @@ bench_mac_unit:
 
 bench_benchmark:
   deps:
-    - alu_8bit.sv
+    - alu_32bit.sv
     - mac_unit.sv
     - alu_mac_datapath.sv
     - tb_benchmark.sv
@@ -32,7 +36,7 @@ bench_benchmark:
 
 dut_execute_stage:
   deps:
-    - alu_8bit.sv
+    - alu_32bit.sv
     - mac_unit.sv
     - alu_mac_datapath.sv
     - riscv_decoder.sv
@@ -41,7 +45,7 @@ dut_execute_stage:
 
 bench_execute_stage:
   deps:
-    - alu_8bit.sv
+    - alu_32bit.sv
     - mac_unit.sv
     - alu_mac_datapath.sv
     - riscv_decoder.sv
@@ -52,6 +56,7 @@ bench_execute_stage:
 
 dut_riscv_core:
   deps:
+    - alu_32bit.sv
     - alu_8bit.sv
     - mac_unit.sv
     - alu_mac_datapath.sv
@@ -62,3 +67,19 @@ dut_riscv_core:
     - writeback_stage.sv
     - hazard_unit.sv
     - riscv_core.sv
+
+bench_riscv_core:
+  deps:
+    - alu_32bit.sv
+    - alu_8bit.sv
+    - mac_unit.sv
+    - alu_mac_datapath.sv
+    - riscv_decoder.sv
+    - register_file.sv
+    - execute_stage.sv
+    - fetch_stage.sv
+    - writeback_stage.sv
+    - hazard_unit.sv
+    - riscv_core.sv
+    - tb_riscv_core.sv
+  top: tb_riscv_core

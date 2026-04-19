@@ -1,0 +1,8 @@
+=== Command: ls simulation_results/sim_2026-04-19T12-54-24-868Z/ (2026-04-19T12:54:36.508Z) ===
+Exit Code: 0
+Output:
+dumpfile.fst
+eda_results.json
+
+=== End Output ===
+

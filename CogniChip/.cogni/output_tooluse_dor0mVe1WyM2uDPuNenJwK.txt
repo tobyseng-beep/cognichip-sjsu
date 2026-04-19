@@ -1,0 +1,13 @@
+=== Command: cd /Users/toby/CogniChip && git add mac_unit.sv alu_mac_datapath.sv tb_mac_unit.sv DEPS.yml && git commit -m "Add MAC unit, ALU-MAC datapath, and MAC testbench for RISC-V custom ISA extensions" && git push (2026-04-19T05:20:08.394Z) ===
+Exit Code: 0
+Output:
+[main 8b9f351] Add MAC unit, ALU-MAC datapath, and MAC testbench for RISC-V custom ISA extensions
+ 4 files changed, 430 insertions(+)
+ create mode 100644 CogniChip/alu_mac_datapath.sv
+ create mode 100644 CogniChip/mac_unit.sv
+ create mode 100644 CogniChip/tb_mac_unit.sv
+To https://github.com/tobyseng-beep/cognichip-sjsu.git
+   a6d6eb1..8b9f351  main -> main
+
+=== End Output ===
+

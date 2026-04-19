@@ -1,0 +1,7 @@
+=== Command: cd /Users/toby/CogniChip && eda sim --no-color --tool icarus bench_riscv_core 2>&1 | tail -60 | cat (2026-04-19T12:52:18.907Z) ===
+Exit Code: 0
+Output:
+zsh:1: command not found: eda
+
+=== End Output ===
+

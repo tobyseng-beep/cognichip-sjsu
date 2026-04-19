@@ -1,0 +1,45 @@
+=== Command: cd /Users/toby/CogniChip/cognichip-sjsu && git pull && ls (2026-04-19T09:58:13.920Z) ===
+Exit Code: 0
+Output:
+From https://github.com/tobyseng-beep/cognichip-sjsu
+   26a7e36..d9cc827  main       -> origin/main
+Updating 26a7e36..d9cc827
+Fast-forward
+ CogniChip/DEPS.yml            |  64 +++++++
+ CogniChip/alu_8bit.sv         | 128 ++++++++++++++
+ CogniChip/alu_8bit_spec.md    | 215 +++++++++++++++++++++++
+ CogniChip/alu_mac_datapath.sv |  45 +++++
+ CogniChip/execute_stage.sv    |  87 +++++++++
+ CogniChip/fetch_stage.sv      |  23 +++
+ CogniChip/hazard_unit.sv      |  15 ++
+ CogniChip/mac_unit.sv         | 147 ++++++++++++++++
+ CogniChip/register_file.sv    |  24 +++
+ CogniChip/riscv_core.sv       |  64 +++++++
+ CogniChip/riscv_decoder.sv    |  71 ++++++++
+ CogniChip/tb_alu_8bit.sv      | 398 ++++++++++++++++++++++++++++++++++++++++++
+ CogniChip/tb_benchmark.sv     | 348 ++++++++++++++++++++++++++++++++++++
+ CogniChip/tb_execute_stage.sv |  93 ++++++++++
+ CogniChip/tb_mac_unit.sv      | 220 +++++++++++++++++++++++
+ CogniChip/writeback_stage.sv  |  22 +++
+ 16 files changed, 1964 insertions(+)
+ create mode 100644 CogniChip/DEPS.yml
+ create mode 100644 CogniChip/alu_8bit.sv
+ create mode 100644 CogniChip/alu_8bit_spec.md
+ create mode 100644 CogniChip/alu_mac_datapath.sv
+ create mode 100644 CogniChip/execute_stage.sv
+ create mode 100644 CogniChip/fetch_stage.sv
+ create mode 100644 CogniChip/hazard_unit.sv
+ create mode 100644 CogniChip/mac_unit.sv
+ create mode 100644 CogniChip/register_file.sv
+ create mode 100644 CogniChip/riscv_core.sv
+ create mode 100644 CogniChip/riscv_decoder.sv
+ create mode 100644 CogniChip/tb_alu_8bit.sv
+ create mode 100644 CogniChip/tb_benchmark.sv
+ create mode 100644 CogniChip/tb_execute_stage.sv
+ create mode 100644 CogniChip/tb_mac_unit.sv
+ create mode 100644 CogniChip/writeback_stage.sv
+CogniChip
+README.md
+
+=== End Output ===
+

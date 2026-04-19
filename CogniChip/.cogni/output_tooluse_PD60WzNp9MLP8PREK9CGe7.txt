@@ -1,0 +1,35 @@
+=== Command: cat > /Users/toby/CogniChip/fetch_stage.sv << 'SVEOF'
+module fetch_stage #(
+    parameter int IMEM_DEPTH = 16
+) (
+    input  logic        clock,
+    input  logic        reset,
+    input  logic        stall,
+    output logic [31:0] instr,
+    output logic [31:0] pc
+);
+    logic [31:0] pc_reg;
+    logic [31:0] imem [0:IMEM_DEPTH-1];
+
+    integer idx;
+    initial begin
+        for (idx = 0; idx < IMEM_DEPTH; idx = idx + 1)
+            imem[idx] = 32'h0;
+    end
+
+    always_ff @(posedge clock or posedge reset) begin
+        if (reset) pc_reg <= 32'h0;
+        else if (!stall) pc_reg <= pc_reg + 32'd4;
+    end
+
+    assign pc    = pc_reg;
+    assign instr = imem[pc_reg[$clog2(IMEM_DEPTH)+1:2]];
+endmodule
+SVEOF
+echo "done" (2026-04-19T05:35:01.180Z) ===
+Exit Code: 0
+Output:
+done
+
+=== End Output ===
+

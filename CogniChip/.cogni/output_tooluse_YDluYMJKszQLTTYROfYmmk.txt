@@ -1,0 +1,53 @@
+=== Command: cd /Users/toby/CogniChip && git status --short && git log --oneline -2 (2026-04-19T09:58:59.433Z) ===
+Exit Code: 0
+Output:
+warning: could not open directory 'Pictures/Photo Booth Library/': Operation not permitted
+warning: could not open directory '.Trash/': Operation not permitted
+?? ../.CFUserTextEncoding
+?? ../.DS_Store
+?? ../.cognichip-beta/
+?? ../.config/
+?? ../.gitconfig
+?? ../.lesshst
+?? ../.local/
+?? ../.lunarclient/
+?? ../.ssh/
+?? ../.swiftpm/
+?? ../.vscode/
+?? ../.zsh_history
+?? ../.zsh_sessions/
+?? ../Applications/
+?? .cogni/
+?? cognichip-sjsu/
+?? simulation_results/
+?? ../Desktop/
+?? ../Documents/
+?? ../Downloads/
+?? ../Library/
+?? ../Movies/
+?? ../Music/
+?? ../Pictures/
+?? ../Public/
+?? ../VSCode/
+?? ../cognichip-sjsu/
+?? ../ee30labfinal
+?? ../ee30labfinal.c
+?? ../ee30labfinal.dSYM/
+?? "../eval \"$(ssh-agent -s)\""
+?? "../eval \"$(ssh-agent -s)\".pub"
+?? ../funnypetnames
+?? ../lab8
+?? ../lab8.c
+?? ../lab8.dSYM/
+?? ../main
+?? ../main.c
+?? ../main.dSYM/
+?? ../samples.coe
+?? ../sin_samples.coe
+?? ../tempCodeRunnerFile
+?? ../tempCodeRunnerFile.c
+d9cc827 Fix duplicate keys in DEPS.yml causing YAML parse failure
+62c5bf1 Add execute stage TB, fetch, writeback, hazard, riscv_core top-level
+
+=== End Output ===
+

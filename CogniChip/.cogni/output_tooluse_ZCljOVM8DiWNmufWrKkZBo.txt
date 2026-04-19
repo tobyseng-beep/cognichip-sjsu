@@ -1,0 +1,21 @@
+=== Command: cd /Users/toby/CogniChip && git add alu_8bit.sv tb_alu_8bit.sv alu_8bit_spec.md DEPS.yml && git commit -m "Add 8-bit ALU: RTL, testbench, spec, and DEPS" && git push (2026-04-19T05:07:23.868Z) ===
+Exit Code: 128
+Output:
+[main (root-commit) c706a32] Add 8-bit ALU: RTL, testbench, spec, and DEPS
+ 4 files changed, 746 insertions(+)
+ create mode 100644 CogniChip/DEPS.yml
+ create mode 100644 CogniChip/alu_8bit.sv
+ create mode 100644 CogniChip/alu_8bit_spec.md
+ create mode 100644 CogniChip/tb_alu_8bit.sv
+fatal: No configured push destination.
+Either specify the URL from the command-line or configure a remote repository using
+
+    git remote add <name> <url>
+
+and then push using the remote name
+
+    git push <name>
+
+
+=== End Output ===
+

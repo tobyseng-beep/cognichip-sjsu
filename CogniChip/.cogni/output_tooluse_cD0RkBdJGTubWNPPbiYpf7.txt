@@ -1,0 +1,74 @@
+=== Command: cat > /Users/toby/CogniChip/riscv_core.sv << 'SVEOF'
+module riscv_core #(
+    parameter int IMEM_DEPTH = 16
+) (
+    input  logic        clock,
+    input  logic        reset,
+    input  logic [31:0] acc_in,
+    output logic [63:0] result,
+    output logic [3:0]  alu_flags,
+    output logic [4:0]  wb_rd,
+    output logic        wb_reg_write,
+    output logic        wb_valid,
+    output logic [31:0] pc_out
+);
+    logic [31:0] fetch_instr;
+    logic [31:0] pc;
+    logic        stall;
+    logic [4:0]  dec_rs1, dec_rs2, dec_rd;
+    logic        dec_unit_sel;
+    logic [3:0]  dec_alu_opcode;
+    logic [1:0]  dec_mac_opcode;
+    logic        dec_reg_write;
+    logic        dec_valid;
+
+    fetch_stage #(.IMEM_DEPTH(IMEM_DEPTH)) u_fetch (
+        .clock (clock),
+        .reset (reset),
+        .stall (stall),
+        .instr (fetch_instr),
+        .pc    (pc)
+    );
+
+    riscv_decoder u_dec_hz (
+        .instr       (fetch_instr),
+        .rs1         (dec_rs1),
+        .rs2         (dec_rs2),
+        .rd          (dec_rd),
+        .unit_sel    (dec_unit_sel),
+        .alu_opcode  (dec_alu_opcode),
+        .mac_opcode  (dec_mac_opcode),
+        .reg_write   (dec_reg_write),
+        .valid_instr (dec_valid)
+    );
+
+    hazard_unit u_haz (
+        .ex_rd        (wb_rd),
+        .ex_reg_write (wb_reg_write),
+        .dec_rs1      (dec_rs1),
+        .dec_rs2      (dec_rs2),
+        .stall        (stall)
+    );
+
+    execute_stage u_exec (
+        .clock        (clock),
+        .reset        (reset),
+        .instr        (stall ? 32'h0 : fetch_instr),
+        .acc_in       (acc_in),
+        .result       (result),
+        .alu_flags    (alu_flags),
+        .wb_rd        (wb_rd),
+        .wb_reg_write (wb_reg_write),
+        .wb_valid     (wb_valid)
+    );
+
+    assign pc_out = pc;
+endmodule
+SVEOF
+echo "done" (2026-04-19T05:35:24.614Z) ===
+Exit Code: 0
+Output:
+done
+
+=== End Output ===
+

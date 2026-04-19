@@ -1,0 +1,17 @@
+=== Command: wc -l alu_8bit.sv mac_unit.sv alu_mac_datapath.sv execute_stage.sv hazard_unit.sv riscv_decoder.sv register_file.sv fetch_stage.sv writeback_stage.sv riscv_core.sv (2026-04-19T12:18:39.703Z) ===
+Exit Code: 0
+Output:
+     128 alu_8bit.sv
+     147 mac_unit.sv
+      45 alu_mac_datapath.sv
+      87 execute_stage.sv
+      15 hazard_unit.sv
+      71 riscv_decoder.sv
+      24 register_file.sv
+      23 fetch_stage.sv
+      22 writeback_stage.sv
+      64 riscv_core.sv
+     626 total
+
+=== End Output ===
+

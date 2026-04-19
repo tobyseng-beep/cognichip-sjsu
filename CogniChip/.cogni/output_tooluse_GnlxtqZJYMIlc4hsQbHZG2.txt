@@ -1,0 +1,15 @@
+=== Command: cd /Users/toby/CogniChip && git add tb_execute_stage.sv fetch_stage.sv writeback_stage.sv hazard_unit.sv riscv_core.sv DEPS.yml && git commit -m "Add execute stage TB, fetch, writeback, hazard, riscv_core top-level" && git push (2026-04-19T05:37:26.218Z) ===
+Exit Code: 0
+Output:
+[main 62c5bf1] Add execute stage TB, fetch, writeback, hazard, riscv_core top-level
+ 6 files changed, 265 insertions(+)
+ create mode 100644 CogniChip/fetch_stage.sv
+ create mode 100644 CogniChip/hazard_unit.sv
+ create mode 100644 CogniChip/riscv_core.sv
+ create mode 100644 CogniChip/tb_execute_stage.sv
+ create mode 100644 CogniChip/writeback_stage.sv
+To https://github.com/tobyseng-beep/cognichip-sjsu.git
+   7a4e874..62c5bf1  main -> main
+
+=== End Output ===
+

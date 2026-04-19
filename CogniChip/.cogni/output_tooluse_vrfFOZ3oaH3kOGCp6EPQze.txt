@@ -1,0 +1,7 @@
+=== Command: cat simulation_results/sim_2026-04-19T12-54-24-868Z/*.log 2>/dev/null | head -80 (2026-04-19T12:54:29.574Z) ===
+Exit Code: 0
+Output:
+zsh:1: no matches found: simulation_results/sim_2026-04-19T12-54-24-868Z/*.log
+
+=== End Output ===
+

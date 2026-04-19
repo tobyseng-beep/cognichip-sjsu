@@ -1,0 +1,23 @@
+=== Command: cd /Users/toby/CogniChip && for f in alu_8bit.sv tb_alu_8bit.sv mac_unit.sv alu_mac_datapath.sv tb_mac_unit.sv tb_benchmark.sv riscv_decoder.sv register_file.sv execute_stage.sv; do
+  perl -0777 -i \
+    -e 's|/\*.*?\*/||gs;' \
+    -e 's|//[^\n]*||g;' \
+    -e 's|[ \t]+$||mg;' \
+    -e 's|\n{3,}|\n\n|g' \
+    "$f"
+  echo "stripped: $f"
+done (2026-04-19T05:27:41.448Z) ===
+Exit Code: 0
+Output:
+stripped: alu_8bit.sv
+stripped: tb_alu_8bit.sv
+stripped: mac_unit.sv
+stripped: alu_mac_datapath.sv
+stripped: tb_mac_unit.sv
+stripped: tb_benchmark.sv
+stripped: riscv_decoder.sv
+stripped: register_file.sv
+stripped: execute_stage.sv
+
+=== End Output ===
+

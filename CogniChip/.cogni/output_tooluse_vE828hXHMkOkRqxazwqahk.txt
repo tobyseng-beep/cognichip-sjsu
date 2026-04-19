@@ -1,0 +1,13 @@
+=== Command: cd /Users/toby/CogniChip && git add alu_8bit.sv tb_alu_8bit.sv mac_unit.sv alu_mac_datapath.sv tb_mac_unit.sv tb_benchmark.sv riscv_decoder.sv register_file.sv execute_stage.sv DEPS.yml && git commit -m "Add RISC-V decoder, register file, execute stage; strip all comments" && git push (2026-04-19T05:27:56.615Z) ===
+Exit Code: 0
+Output:
+[main 7a4e874] Add RISC-V decoder, register file, execute stage; strip all comments
+ 4 files changed, 191 insertions(+)
+ create mode 100644 CogniChip/execute_stage.sv
+ create mode 100644 CogniChip/register_file.sv
+ create mode 100644 CogniChip/riscv_decoder.sv
+To https://github.com/tobyseng-beep/cognichip-sjsu.git
+   c0cdc3c..7a4e874  main -> main
+
+=== End Output ===
+

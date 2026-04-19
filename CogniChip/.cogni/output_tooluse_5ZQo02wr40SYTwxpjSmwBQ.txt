@@ -1,0 +1,13 @@
+=== Command: ls /Users/toby/CogniChip/cognichip-sjsu/ 2>/dev/null && echo "---" && ls /Users/toby/CogniChip/*.sv 2>/dev/null | head -5 (2026-04-19T09:58:02.186Z) ===
+Exit Code: 0
+Output:
+README.md
+---
+/Users/toby/CogniChip/alu_8bit.sv
+/Users/toby/CogniChip/alu_mac_datapath.sv
+/Users/toby/CogniChip/execute_stage.sv
+/Users/toby/CogniChip/fetch_stage.sv
+/Users/toby/CogniChip/hazard_unit.sv
+
+=== End Output ===
+

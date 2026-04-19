@@ -1,0 +1,142 @@
+=== Command: cat > /Users/toby/CogniChip/fetch_stage.sv << 'SVEOF'
+module fetch_stage #(parameter int IMEM_DEPTH = 16) (
+    input  logic        clock,
+    input  logic        reset,
+    input  logic        stall,
+    output logic [31:0] instr,
+    output logic [31:0] pc
+);
+    logic [31:0] pc_reg;
+    logic [31:0] imem [0:IMEM_DEPTH-1];
+
+    integer k;
+    initial begin
+        for (k = 0; k < IMEM_DEPTH; k = k + 1) imem[k] = 32'h0;
+    end
+
+    always_ff @(posedge clock or posedge reset) begin
+        if (reset) pc_reg <= 32'h0;
+        else if (!stall) pc_reg <= pc_reg + 32'd4;
+    end
+
+    assign pc    = pc_reg;
+    assign instr = imem[pc_reg[$clog2(IMEM_DEPTH)+1:2]];
+endmodule
+SVEOF
+
+cat > /Users/toby/CogniChip/writeback_stage.sv << 'SVEOF'
+module writeback_stage (
+    input  logic [63:0] result,
+    input  logic        unit_sel,
+    input  logic [1:0]  mac_opcode,
+    input  logic [4:0]  rd,
+    input  logic        reg_write,
+    output logic [31:0] wb_data_lo,
+    output logic [31:0] wb_data_hi,
+    output logic [4:0]  wb_rd_lo,
+    output logic [4:0]  wb_rd_hi,
+    output logic        wb_en_lo,
+    output logic        wb_en_hi
+);
+    localparam logic [1:0] OP_MATMUL = 2'b10;
+
+    assign wb_data_lo = result[31:0];
+    assign wb_data_hi = result[63:32];
+    assign wb_rd_lo   = rd;
+    assign wb_rd_hi   = (rd != 5'd31) ? rd + 5'd1 : 5'd0;
+    assign wb_en_lo   = reg_write;
+    assign wb_en_hi   = reg_write & unit_sel & (mac_opcode == OP_MATMUL) & (rd != 5'd31);
+endmodule
+SVEOF
+
+cat > /Users/toby/CogniChip/hazard_unit.sv << 'SVEOF'
+module hazard_unit (
+    input  logic [4:0] ex_rd,
+    input  logic       ex_reg_write,
+    input  logic [4:0] dec_rs1,
+    input  logic [4:0] dec_rs2,
+    output logic       stall
+);
+    always_comb begin
+        stall = 1'b0;
+        if (ex_reg_write && (ex_rd != 5'h0)) begin
+            if ((ex_rd == dec_rs1) || (ex_rd == dec_rs2))
+                stall = 1'b1;
+        end
+    end
+endmodule
+SVEOF
+
+cat > /Users/toby/CogniChip/riscv_core.sv << 'SVEOF'
+module riscv_core #(parameter int IMEM_DEPTH = 16) (
+    input  logic        clock,
+    input  logic        reset,
+    input  logic [31:0] acc_in,
+    output logic [63:0] result,
+    output logic [3:0]  alu_flags,
+    output logic [4:0]  wb_rd,
+    output logic        wb_reg_write,
+    output logic        wb_valid,
+    output logic [31:0] pc_out
+);
+    logic [31:0] fetch_instr;
+    logic [31:0] pc;
+    logic        stall;
+
+    logic [4:0]  dec_rs1, dec_rs2, dec_rd;
+    logic        dec_unit_sel;
+    logic [3:0]  dec_alu_opcode;
+    logic [1:0]  dec_mac_opcode;
+    logic        dec_reg_write;
+    logic        dec_valid;
+
+    fetch_stage #(.IMEM_DEPTH(IMEM_DEPTH)) u_fetch (
+        .clock (clock),
+        .reset (reset),
+        .stall (stall),
+        .instr (fetch_instr),
+        .pc    (pc)
+    );
+
+    riscv_decoder u_dec (
+        .instr       (fetch_instr),
+        .rs1         (dec_rs1),
+        .rs2         (dec_rs2),
+        .rd          (dec_rd),
+        .unit_sel    (dec_unit_sel),
+        .alu_opcode  (dec_alu_opcode),
+        .mac_opcode  (dec_mac_opcode),
+        .reg_write   (dec_reg_write),
+        .valid_instr (dec_valid)
+    );
+
+    hazard_unit u_haz (
+        .ex_rd       (wb_rd),
+        .ex_reg_write(wb_reg_write),
+        .dec_rs1     (dec_rs1),
+        .dec_rs2     (dec_rs2),
+        .stall       (stall)
+    );
+
+    execute_stage u_exec (
+        .clock       (clock),
+        .reset       (reset),
+        .instr       (stall ? 32'h0 : fetch_instr),
+        .acc_in      (acc_in),
+        .result      (result),
+        .alu_flags   (alu_flags),
+        .wb_rd       (wb_rd),
+        .wb_reg_write(wb_reg_write),
+        .wb_valid    (wb_valid)
+    );
+
+    assign pc_out = pc;
+endmodule
+SVEOF
+echo "all done" (2026-04-19T05:37:09.468Z) ===
+Exit Code: 0
+Output:
+all done
+
+=== End Output ===
+

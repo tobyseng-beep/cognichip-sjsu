@@ -1,0 +1,21 @@
+=== Command: cd /Users/toby/CogniChip && cat DEPS.yml | grep -A 20 "bench_riscv_core" (2026-04-19T12:52:46.805Z) ===
+Exit Code: 0
+Output:
+bench_riscv_core:
+  deps:
+    - alu_32bit.sv
+    - alu_8bit.sv
+    - mac_unit.sv
+    - alu_mac_datapath.sv
+    - riscv_decoder.sv
+    - register_file.sv
+    - execute_stage.sv
+    - fetch_stage.sv
+    - writeback_stage.sv
+    - hazard_unit.sv
+    - riscv_core.sv
+    - tb_riscv_core.sv
+  top: tb_riscv_core
+
+=== End Output ===
+

@@ -1,0 +1,6 @@
+=== Command: ls -la /Users/toby/CogniChip/ | grep tb_mac (2026-04-19T05:18:02.595Z) ===
+Exit Code: 1
+Output:
+
+=== End Output ===
+

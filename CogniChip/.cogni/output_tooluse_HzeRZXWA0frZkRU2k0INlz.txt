@@ -1,0 +1,51 @@
+=== Command: cd /Users/toby/CogniChip && git status --short (2026-04-19T05:26:46.654Z) ===
+Exit Code: 0
+Output:
+warning: could not open directory 'Pictures/Photo Booth Library/': Operation not permitted
+warning: could not open directory '.Trash/': Operation not permitted
+?? ../.CFUserTextEncoding
+?? ../.DS_Store
+?? ../.cognichip-beta/
+?? ../.config/
+?? ../.gitconfig
+?? ../.lesshst
+?? ../.local/
+?? ../.lunarclient/
+?? ../.ssh/
+?? ../.swiftpm/
+?? ../.vscode/
+?? ../.zsh_history
+?? ../.zsh_sessions/
+?? ../Applications/
+?? .cogni/
+?? cognichip-sjsu/
+?? simulation_results/
+?? ../Desktop/
+?? ../Documents/
+?? ../Downloads/
+?? ../Library/
+?? ../Movies/
+?? ../Music/
+?? ../Pictures/
+?? ../Public/
+?? ../VSCode/
+?? ../cognichip-sjsu/
+?? ../ee30labfinal
+?? ../ee30labfinal.c
+?? ../ee30labfinal.dSYM/
+?? "../eval \"$(ssh-agent -s)\""
+?? "../eval \"$(ssh-agent -s)\".pub"
+?? ../funnypetnames
+?? ../lab8
+?? ../lab8.c
+?? ../lab8.dSYM/
+?? ../main
+?? ../main.c
+?? ../main.dSYM/
+?? ../samples.coe
+?? ../sin_samples.coe
+?? ../tempCodeRunnerFile
+?? ../tempCodeRunnerFile.c
+
+=== End Output ===
+
