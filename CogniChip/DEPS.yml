@@ -3,3 +3,21 @@ bench_alu_8bit:
     - alu_8bit.sv
     - tb_alu_8bit.sv
   top: tb_alu_8bit
+
+dut_mac_unit:
+  deps:
+    - mac_unit.sv
+
+dut_alu_mac_datapath:
+  deps:
+    - alu_8bit.sv
+    - mac_unit.sv
+    - alu_mac_datapath.sv
+
+bench_mac_unit:
+  deps:
+    - alu_8bit.sv
+    - mac_unit.sv
+    - alu_mac_datapath.sv
+    - tb_mac_unit.sv
+  top: tb_mac_unit
